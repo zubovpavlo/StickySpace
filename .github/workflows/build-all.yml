@@ -69,6 +69,29 @@ jobs:
           cache: true
       - name: Fetch packages
         run: flutter pub get
+      # Temporary workaround for Flutter issue #191575 (macOS AOT _Rect crash).
+      # This changes the CI runner's Flutter SDK only; it does not edit app code.
+      # Remove when fixed in the pinned Flutter release.
+      - name: Work around Flutter macOS AOT windowing crash
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import shutil
+
+          flutter = shutil.which("flutter")
+          if not flutter:
+              raise SystemExit("Flutter executable not found")
+          sdk_root = Path(flutter).resolve().parents[1]
+          target = sdk_root / "packages/flutter/lib/src/foundation/_features.dart"
+          old = "bool isWindowingEnabled = debugEnabledFeatureFlags.contains('windowing');"
+          new = "bool isWindowingEnabled = false;"
+          source = target.read_text(encoding="utf-8")
+          if source.count(old) != 1:
+              raise SystemExit(f"Flutter SDK layout has changed: {target}")
+          target.write_text(source.replace(old, new, 1), encoding="utf-8")
+          print("Disabled experimental windowing in macOS CI Flutter SDK")
+          PYCODE
       - name: Build macOS
         run: flutter build macos --release
       - name: Build iOS (unsigned)
