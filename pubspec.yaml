@@ -1,0 +1,15 @@
+name: sticky_space
+version: 0.1.0+1
+publish_to: none
+description: Personal sticky notes synced between Windows and iPhone.
+
+environment:
+  sdk: '>=3.9.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.18.3
+
+flutter:
+  uses-material-design: true
